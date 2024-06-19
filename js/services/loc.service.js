@@ -1,6 +1,8 @@
 import { utilService } from './util.service.js'
 import { storageService } from './async-storage.service.js'
 
+const DAY = 1000 * 60 * 60 * 24
+
 // const sampleLoc = {
 //     id: 'GEouN',
 //     name: 'Dahab, Egypt',
@@ -30,7 +32,8 @@ export const locService = {
     save,
     setFilterBy,
     setSortBy,
-    getLocCountByRateMap
+    getLocCountByRateMap,
+    getLocCountByLastUpdated
 }
 
 function query() {
@@ -99,6 +102,27 @@ function getLocCountByRateMap() {
             }, { high: 0, medium: 0, low: 0 })
             locCountByRateMap.total = locs.length
             return locCountByRateMap
+        })
+}
+
+function getLocCountByLastUpdated() {
+    return storageService.query(DB_KEY)
+        .then(locs => {
+            const locCountByLastUpdated = locs.reduce((map, loc) => {
+                const timeNow = Date.now()
+                const lastUpdated = loc.lastUpdated
+                const diff = (lastUpdated - timeNow) / DAY
+
+                console.log('timeNow:', timeNow)
+                console.log('lastUpdated:', lastUpdated);
+                // console.log('lastUpdated:', lastUpdated);
+                if (diff === undefined || diff === null) map.never++
+                else if (diff >= 1) map.past++
+                else map.today++
+                return map
+            }, { today: 0, past: 0, never: 0 })
+            // locCountByRateMap.total = locs.length
+            return locCountByLastUpdated
         })
 }
 
