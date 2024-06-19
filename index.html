@@ -67,6 +67,24 @@
             </section>
         </div>
     </main>
+    <!-- The Modal -->
+    <dialog id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span onclick="onCloseModal()" class="close">&times;</span>
+            <p>Some text in the Modal..</p>
+            <input class="modal-input" type="text" placeholder="Enter text">
+            <input type="number" class="range" placeholder="Enter range" hidden>
+            <div class="buttons">
+                <button onclick="onAddLoc()" class="add"hidden>Add</button>
+                <button onclick="onUpdateLoc()" class="update"hidden>Update</button>
+                <button class="cancel" onclick="onCloseModal()">cancel</button>
+            </div>
+
+        </div>
+
+    </dialog>
     <pre class="debug" hidden></pre>
     <div class="user-msg"></div>
     <script type="module" src="js/app.controller.js"></script>

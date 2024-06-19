@@ -55,7 +55,7 @@ function query() {
             } else if (gSortBy.name !== undefined) {
                 locs.sort((p1, p2) => p1.name.localeCompare(p2.name) * gSortBy.name)
             }
-
+            console.log(locs)
             return locs
         })
 }
@@ -74,6 +74,7 @@ function save(loc) {
         return storageService.put(DB_KEY, loc)
     } else {
         loc.createdAt = loc.updatedAt = Date.now()
+        console.log(loc)
         return storageService.post(DB_KEY, loc)
     }
 }

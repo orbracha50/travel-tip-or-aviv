@@ -1,9 +1,13 @@
 import { utilService } from './services/util.service.js'
 import { locService } from './services/loc.service.js'
 import { mapService } from './services/map.service.js'
-
 window.onload = onInit
-
+window.onCloseModal = onCloseModal
+window.onAddLoc = onAddLoc
+window.onUpdateLoc = onUpdateLoc
+window.openModal = openModal
+var gGeo
+var gLocId
 // To make things easier in this project structure 
 // functions that are called from DOM are defined on a global app object
 window.app = {
@@ -22,9 +26,9 @@ function onInit() {
     getFilterByFromQueryParams()
     loadAndRenderLocs()
     mapService.initMap()
-        .then(() => {
+        .then((geo) => {
             // onPanToTokyo()
-            mapService.addClickListener(onAddLoc)
+            mapService.addClickListener(setGeo)
         })
         .catch(err => {
             console.error('OOPs:', err)
@@ -51,7 +55,7 @@ function renderLocs(locs) {
             </p>
             <div class="loc-btns">     
                <button title="Delete" onclick="app.onRemoveLoc('${loc.id}')">🗑️</button>
-               <button title="Edit" onclick="app.onUpdateLoc('${loc.id}')">✏️</button>
+               <button title="Edit" onclick="openModal('update','${loc.id}')">✏️</button>
                <button title="Select" onclick="app.onSelectLoc('${loc.id}')">🗺️</button>
             </div>     
         </li>`}).join('')
@@ -94,17 +98,20 @@ function onSearchAddress(ev) {
         })
 }
 
-function onAddLoc(geo) {
-    const locName = prompt('Loc name', geo.address || 'Just a place')
-    if (!locName) return
+function onAddLoc() {
+    /* const locName = prompt('Loc name', geo.address || 'Just a place') */
+    const locName = document.querySelector('.modal-input').value 
 
+    onCloseModal()
+    if (!locName) return
     const loc = {
         name: locName,
-        rate: +prompt(`Rate (1-5)`, '3'),
-        geo
+        rate: document.querySelector('.range').value ,
+        geo: gGeo
     }
     locService.save(loc)
         .then((savedLoc) => {
+            console.log(savedLoc)
             flashMsg(`Added Location (id: ${savedLoc.id})`)
             utilService.updateQueryParams({ locId: savedLoc.id })
             loadAndRenderLocs()
@@ -117,7 +124,8 @@ function onAddLoc(geo) {
 
 function loadAndRenderLocs() {
     locService.query()
-        .then(renderLocs)
+        .then(res=> { console.log(res)
+             renderLocs(res)} )
         .catch(err => {
             console.error('OOPs:', err)
             flashMsg('Cannot load locations')
@@ -138,12 +146,15 @@ function onPanToUserPos() {
         })
 }
 
-function onUpdateLoc(locId) {
-    locService.getById(locId)
+function onUpdateLoc() {
+    locService.getById(gLocId)
         .then(loc => {
-            const rate = prompt('New rate?', loc.rate)
+            console.log(loc)
+            const rate =  document.querySelector('.modal-input').value
+            onCloseModal()
             if (rate !== loc.rate) {
                 loc.rate = rate
+                console.log(loc)
                 locService.save(loc)
                     .then(savedLoc => {
                         flashMsg(`Rate was set to: ${savedLoc.rate}`)
@@ -223,7 +234,7 @@ function getFilterByFromQueryParams() {
     const queryParams = new URLSearchParams(window.location.search)
     const txt = queryParams.get('txt') || ''
     const minRate = queryParams.get('minRate') || 0
-    locService.setFilterBy({txt, minRate})
+    locService.setFilterBy({ txt, minRate })
 
     document.querySelector('input[name="filter-by-txt"]').value = txt
     document.querySelector('input[name="filter-by-rate"]').value = minRate
@@ -313,4 +324,32 @@ function cleanStats(stats) {
         return acc
     }, [])
     return cleanedStats
+}
+
+function openModal(addOrUpdate,locId) {
+    document.querySelector('.modal').style.display = 'block'
+    
+    if(addOrUpdate=== 'add'){
+        document.querySelector('.modal-content p').innerText = 'Do you want to add this loction?'
+        document.querySelector('.add').hidden = false
+        document.querySelector('.update').hidden = true
+        document.querySelector('.range').hidden = false
+
+    }else{
+        gLocId = locId
+        console.log(locId)
+        document.querySelector('.modal-content p').innerText = 'New rate?'
+        document.querySelector('.update').hidden = false
+        document.querySelector('.add').hidden = true
+        document.querySelector('.range').hidden = true
+    } 
+}
+
+function setGeo(geo){
+    gGeo = geo
+    openModal('add')
+}
+function onCloseModal() {
+    document.querySelector('.modal').style.display = 'none'
+    document.querySelector('.modal-input').value = ''
 }
