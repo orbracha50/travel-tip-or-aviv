@@ -73,6 +73,7 @@ function renderLocs(locs) {
 }
 
 function onRemoveLoc(locId) {
+
     locService.remove(locId)
         .then(() => {
             flashMsg('Location removed')
@@ -273,6 +274,9 @@ function onSetFilterBy({ txt, minRate }) {
 function renderLocStats() {
     locService.getLocCountByRateMap().then(stats => {
         handleStats(stats, 'loc-stats-rate')
+    })
+    locService.getLocCountByLastUpdated().then(stats => {
+        handleStats(stats, 'loc-stats-last-update')
     })
 }
 
