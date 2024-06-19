@@ -65,7 +65,11 @@ function getById(locId) {
 }
 
 function remove(locId) {
-    return storageService.remove(DB_KEY, locId)
+    return doConfirm('Are you sure?')
+        .then(res => {
+            if (res) return storageService.remove(DB_KEY, locId)
+        })
+    // return storageService.remove(DB_KEY, locId)
 }
 
 function save(loc) {
@@ -172,3 +176,7 @@ function _createLoc(loc) {
 //     }
 // }
 
+function doConfirm(title = 'Are you sure?') {
+    const isConfirmed = confirm(title)
+    return Promise.resolve(isConfirmed)
+}
